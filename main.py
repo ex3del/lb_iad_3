@@ -213,3 +213,57 @@ def lesok(table):
         plt.show()
 
     graph('sepal length (cm)', 'petal length (cm)', 'petal width (cm)')
+
+
+def best_param_les(table):
+    X_train = table.iloc[:, :-1]
+    y_train = table['target']
+    clf = RandomForestClassifier()
+    parameters = {'n_estimators': range(10, 51, 10),  # число деревьев в лесу. Оно будет изменяться от 10 до 50 с шагом 10
+                  'max_depth': range(1, 13, 2),  # глубина дерева. Она будет изменяться от 1 до 12 с шагом в 2
+                  'min_samples_leaf': range(1, 8),  # минимальное число образцов в листах. Оно будет изменяться от 1 до 7
+                  'min_samples_split': range(2, 10, 2)}  # минимальное число образцов для сплита. Оно будет изменяться от 2 до 9.
+    grid = GridSearchCV(clf, parameters, cv=5)
+    grid.fit(X_train, y_train)
+    print(grid.best_params_)
+
+
+def best_param_drevo(table):
+    X_train = table.iloc[:, :-1]
+    y_train = table['target']
+    clf = LogisticRegression()
+    parameters = {'criterion': ["gini", "entropy"],  # The function to measure the quality of a split
+                  'splitter': ["best", "random"],  # The strategy used to choose the split at each node
+                  'max_depth': range(1, 13, 2),  # The maximum depth of the tree
+                  'min_samples_split': range(2, 10, 2),  # минимальное число образцов для сплита
+                  'min_samples_leaf': range(1, 8)}  # минимальное число образцов в листах.
+    grid = GridSearchCV(clf, parameters, cv=5)
+    grid.fit(X_train, y_train)
+    print(grid.best_params_)
+
+
+def best_param_reg(table):
+    X_train = table.iloc[:, :-1]
+    y_train = table['target']
+    clf = LogisticRegression()
+    parameters = {'penalty': ['l1', 'l2', 'elasticnet', 'none'],  #  нормa штрафа
+                  'C': np.logspace(-3, 3, 7),  # обратная сила регуляризации; меньшие значения указывают на более сильную регуляризацию.
+                  'solver': ['newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga'],  # алгоритм для использования в задаче оптимизации.
+                  'max_iter': range(100, 1001, 100)}  # максимальное количество итераций, необходимое для сходимости решателей.
+    grid = GridSearchCV(clf, parameters, cv=5)
+    grid.fit(X_train, y_train)
+    print(grid.best_params_)
+
+
+def best_sosedi(table):
+    X_train = table.iloc[:, :-1]
+    y_train = table['target']
+    clf = KNeighborsClassifier()
+    parameters = {'n_neighbors': range(1, 10),  # Number of neighbors to use
+                  'weights': ['uniform', 'distance'],  # Weight function used in prediction
+                  'algorithm': ['auto', 'ball_tree', 'kd_tree', 'brute'],  # Algorithm used to compute the nearest neighbors
+                  'metric': ['minkowski', 'euclidean', 'cityblock', 'chebyshev']}  # The distance metric to use for the tree
+    grid = GridSearchCV(clf, parameters, cv=5)
+    grid.fit(X_train, y_train)
+    print(grid.best_params_)
+
