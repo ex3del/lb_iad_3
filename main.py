@@ -12,7 +12,9 @@ from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 from sklearn.metrics import f1_score
 from sklearn.model_selection import KFold
-
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import GridSearchCV
 
 
 iris = load_iris()
@@ -58,22 +60,24 @@ def tsne(table):
     return plt.figure
 
 
-def lin_reg_class(table):
-    kfold = KFold(n_splits=3, shuffle=True)
+def k_sosedi(table):
+    kfold = KFold(n_splits=3, shuffle=True, random_state=110)
     max = 0
     for train, test in kfold.split(table):
-        lreg_clf = LogisticRegression(max_iter=200)
-        lreg_clf.fit(table.iloc[train, [0, 1, 2, 3]], table.iloc[train, [4]])
-        lrg_predict = lreg_clf.predict(table.iloc[test, [0, 1, 2, 3]])
-        x = [float(accuracy_score(lrg_predict, table.iloc[test, [4]])),
-            float(recall_score(lrg_predict, table.iloc[test, [4]], average="macro")),
-            float(precision_score(lrg_predict, table.iloc[test, [4]], average="macro")),
-            float(f1_score(lrg_predict, table.iloc[test, [4]], average="macro"))]
-        if sum(x) > max:
-            kfs = x
-            max = sum(x)
-            test_dats, best_pred_id = table.iloc[test, :], lrg_predict
+        knn_mod = KNeighborsClassifier(n_neighbors=3)
+        knn_mod.fit(table.iloc[train, [0, 1, 2, 3]], table.iloc[train, [4]])
+        knn_pred = knn_mod.predict(table.iloc[test, [0, 1, 2, 3]])
+        ks = [float(accuracy_score(knn_pred, table.iloc[test, [4]])),
+            float(recall_score(knn_pred, table.iloc[test, [4]], average="macro")),
+            float(precision_score(knn_pred, table.iloc[test, [4]], average="macro")),
+            float(f1_score(knn_pred, table.iloc[test, [4]], average="macro"))]
+        if sum(ks) > max and sum(ks) != 1:
+            kfs = ks
+            max = sum(ks)
+            test_dats, best_pred_id = table.iloc[test, :], knn_pred
     [print(f'{k}: {v}') for k, v in dict(zip(['accuracy_score', 'recall_score', 'precision_score', 'f1_score'], map(float, kfs))).items()]
+    print(f'average: {sum(ks)/len(ks)}')
+
     def graph(x, y, z):
         fig = plt.figure()
         ax = fig.add_subplot(1, 2, 1, projection='3d')
@@ -95,4 +99,117 @@ def lin_reg_class(table):
     graph('sepal length (cm)',  'petal length (cm)', 'petal width (cm)')
 
 
+def lin_reg_class(table):
+    kfold = KFold(n_splits=3, shuffle=True, random_state=110)
+    max = 0
+    for train, test in kfold.split(table):
+        lreg_clf = LogisticRegression(max_iter=100)
+        lreg_clf.fit(table.iloc[train, [0, 1, 2, 3]], table.iloc[train, [4]])
+        lrg_predict = lreg_clf.predict(table.iloc[test, [0, 1, 2, 3]])
+        ks = [float(accuracy_score(lrg_predict, table.iloc[test, [4]])),
+             float(recall_score(lrg_predict, table.iloc[test, [4]], average="macro")),
+             float(precision_score(lrg_predict, table.iloc[test, [4]], average="macro")),
+             float(f1_score(lrg_predict, table.iloc[test, [4]], average="macro"))]
+        if sum(ks) > max and sum(ks) != 1:
+            kfs = ks
+            max = sum(ks)
+            test_dats, best_pred_id = table.iloc[test, :], lrg_predict
+    [print(f'{k}: {v}') for k, v in dict(zip(['accuracy_score', 'recall_score', 'precision_score', 'f1_score'], map(float, kfs))).items()]
+    print(f'average: {sum(ks)/len(ks)}')
 
+    def graph(x, y, z):
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 2, 1, projection='3d')
+        ax.scatter(test_dats[x], test_dats[y], test_dats[z], c=test_dats.target, label='Хар-ки цвектов')
+        ax.set_xlabel(x)
+        ax.set_ylabel(y)
+        ax.set_zlabel(z)
+        ax.legend()
+        plt.title('Реальные классы')
+        ax = fig.add_subplot(1, 2, 2, projection='3d')
+        ax.scatter(test_dats[x], test_dats[y], test_dats[z], c=best_pred_id, label='Хар-ки цвектов')
+        ax.set_xlabel(x)
+        ax.set_ylabel(y)
+        ax.set_zlabel(z)
+        ax.legend()
+        plt.title('Работа классификатора')
+        plt.show()
+
+    graph('sepal length (cm)', 'petal length (cm)', 'petal width (cm)')
+
+
+def drevo(table):
+    kfold = KFold(n_splits=3, shuffle=True, random_state=110)
+    max = 0
+    for train, test in kfold.split(table):
+        drevo_clf = DecisionTreeClassifier(criterion='gini', max_depth=4, random_state=110)
+        drevo_clf.fit(table.iloc[train, [0, 1, 2, 3]], table.iloc[train, [4]])
+        drevo_predict = drevo_clf.predict(table.iloc[test, [0, 1, 2, 3]])
+        ks = [float(accuracy_score(drevo_predict, table.iloc[test, [4]])),
+             float(recall_score(drevo_predict, table.iloc[test, [4]], average="macro")),
+             float(precision_score(drevo_predict, table.iloc[test, [4]], average="macro")),
+             float(f1_score(drevo_predict, table.iloc[test, [4]], average="macro"))]
+        if sum(ks) > max and sum(ks) != 1:
+            kfs = ks
+            max = sum(ks)
+            test_dats, best_pred_id = table.iloc[test, :], drevo_predict
+    [print(f'{k}: {v}') for k, v in dict(zip(['accuracy_score', 'recall_score', 'precision_score', 'f1_score'], map(float, kfs))).items()]
+    print(f'average: {sum(ks)/len(ks)}')
+    def graph(x, y, z):
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 2, 1, projection='3d')
+        ax.scatter(test_dats[x], test_dats[y], test_dats[z], c=test_dats.target, label='Хар-ки цвектов')
+        ax.set_xlabel(x)
+        ax.set_ylabel(y)
+        ax.set_zlabel(z)
+        ax.legend()
+        plt.title('Реальные классы')
+        ax = fig.add_subplot(1, 2, 2, projection='3d')
+        ax.scatter(test_dats[x], test_dats[y], test_dats[z], c=best_pred_id, label='Хар-ки цвектов')
+        ax.set_xlabel(x)
+        ax.set_ylabel(y)
+        ax.set_zlabel(z)
+        ax.legend()
+        plt.title('Работа классификатора')
+        plt.show()
+
+    graph('sepal length (cm)', 'petal length (cm)', 'petal width (cm)')
+
+
+def lesok(table):
+    kfold = KFold(n_splits=3, shuffle=True, random_state=110)
+    max = 0
+    for train, test in kfold.split(table):
+        les_clf = RandomForestClassifier(n_estimators=20, random_state=110)
+        les_clf.fit(table.iloc[train, [0, 1, 2, 3]], table.iloc[train, [4]])
+        les_predict = les_clf.predict(table.iloc[test, [0, 1, 2, 3]])
+        ks = [float(accuracy_score(les_predict, table.iloc[test, [4]])),
+              float(recall_score(les_predict, table.iloc[test, [4]], average="macro")),
+              float(precision_score(les_predict, table.iloc[test, [4]], average="macro")),
+              float(f1_score(les_predict, table.iloc[test, [4]], average="macro"))]
+        if sum(ks) > max and sum(ks) != 1:
+            kfs = ks
+            max = sum(ks)
+            test_dats, best_pred_id = table.iloc[test, :], les_predict
+    [print(f'{k}: {v}') for k, v in dict(zip(['accuracy_score', 'recall_score', 'precision_score', 'f1_score'], map(float, kfs))).items()]
+    print(f'average: {sum(ks) / len(ks)}')
+
+    def graph(x, y, z):
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 2, 1, projection='3d')
+        ax.scatter(test_dats[x], test_dats[y], test_dats[z], c=test_dats.target, label='Хар-ки цвектов')
+        ax.set_xlabel(x)
+        ax.set_ylabel(y)
+        ax.set_zlabel(z)
+        ax.legend()
+        plt.title('Реальные классы')
+        ax = fig.add_subplot(1, 2, 2, projection='3d')
+        ax.scatter(test_dats[x], test_dats[y], test_dats[z], c=best_pred_id, label='Хар-ки цвектов')
+        ax.set_xlabel(x)
+        ax.set_ylabel(y)
+        ax.set_zlabel(z)
+        ax.legend()
+        plt.title('Работа классификатора')
+        plt.show()
+
+    graph('sepal length (cm)', 'petal length (cm)', 'petal width (cm)')
