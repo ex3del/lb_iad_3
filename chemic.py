@@ -25,40 +25,39 @@ chemic_bd = pd.read_csv('Chemical_process.csv', delimiter=';', dtype='float64')
 
 
 def pca(tabl):
-    features = ['sepal length (cm)', 'sepal width (cm)', 'petal length (cm)', 'petal width (cm)']
-    tabl = tabl.replace({'target': {0: 'iris_setosa', 1: 'iris_versicolor', 2: 'iris_virginica'}})
+    features = ['YIELD', 'HCL', 'NH3', 'H20', 'CATALYST']
     x = tabl.loc[:, features].values
-    y = tabl.loc[:, ['target']].values
     x = StandardScaler().fit_transform(x) # pd.DataFrame(data=x, columns=features).head())
-    pca = PCA(n_components=2)
+    pca = PCA(n_components=3)
     prcp_compon = pca.fit_transform(x)
-    prcp_df = pd.DataFrame(data=prcp_compon, columns=['PC1', 'PC2'])
-    final_df = pd.concat([prcp_df, tabl['target']], axis=1)
-    print(sum(pca.explained_variance_ratio_))
+    prcp_df = pd.DataFrame(data=prcp_compon, columns=['PC1', 'PC2', 'PC3'])
+    final_df = pd.concat([prcp_df], axis=1)
+    print(pca.explained_variance_ratio_)
     def pca_graph():
-        plt.scatter(final_df['PC1'], final_df['PC2'], label='Хар-ки цветков')
-        plt.grid()
-        plt.legend()
-        plt.xlabel('PC1')
-        plt.ylabel('PC2')
-        plt.title('2 Component PCA')
+        fig = plt.figure()
+        ax = fig.add_subplot(projection='3d')
+        ax.scatter(final_df['PC1'], final_df['PC2'], final_df['PC3'])
+        ax.grid()
+        ax.legend()
+        ax.set_xlabel('PC1')
+        ax.set_ylabel('PC2')
+        ax.set_zlabel('PC#')
         plt.show()
     pca_graph()
 
-
 def tsne(table):
-    table = table.drop(columns=['target'])
-    features = ['sepal length (cm)', 'sepal width (cm)', 'petal length (cm)', 'petal width (cm)']
+    features = ['YIELD', 'HCL', 'NH3', 'H20', 'CATALYST']
     X = table.loc[:, features].values
-    cvetochki = TSNE(n_components=2, perplexity=5, early_exaggeration=12, n_iter=5000, random_state=100)
+    cvetochki = TSNE(n_components=3, perplexity=10, early_exaggeration=12, n_iter=5000, random_state=100)
     X_cvetochki = pd.DataFrame(cvetochki.fit_transform(X))
-    plt.scatter(X_cvetochki[0], X_cvetochki[1], label='Хар-ки цветков')
-    plt.grid()
-    plt.legend()
-    plt.xlabel('Dimension 1')
-    plt.ylabel('Dimension 2')
+    fig = plt.figure()
+    ax = fig.add_subplot( projection='3d')
+    ax.scatter(X_cvetochki[0], X_cvetochki[1], X_cvetochki[2])
+    ax.set_xlabel('Dimension 1')
+    ax.set_ylabel('Dimension 2')
+    ax.set_zlabel('Dimension 3')
     plt.title('t-SNE')
-    return plt.figure
+    plt.show()
 
 
 def k_sosedi(table):
@@ -271,5 +270,4 @@ def best_sosedi(table):
     print(grid.best_params_)
 
 
-print(chemic_bd.corr())
-
+pca(chemic_bd)
