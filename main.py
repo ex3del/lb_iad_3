@@ -21,6 +21,7 @@ iris = load_iris()
 # 0 - iris_setosa, 1- iris_versicolor, 2-iris_virginica
 # 'sepal length (cm)' ,  'petal length (cm)', 'petal width (cm)', 'sepal width (cm)'
 iris_pd = pd.DataFrame(data=np.c_[iris['data'], iris['target']], columns=iris['feature_names'] + ['target'])
+chemic_bd = pd.read_csv('Chemical_process.csv', delimiter=';', dtype='float64')
 
 
 def pca(tabl):
@@ -64,7 +65,7 @@ def k_sosedi(table):
     kfold = KFold(n_splits=3, shuffle=True, random_state=110)
     max = 0
     for train, test in kfold.split(table):
-        knn_mod = KNeighborsClassifier(n_neighbors=3)
+        knn_mod = KNeighborsClassifier(n_neighbors=5, algorithm='auto', metric='chebyshev', weights='uniform')
         knn_mod.fit(table.iloc[train, [0, 1, 2, 3]], table.iloc[train, [4]])
         knn_pred = knn_mod.predict(table.iloc[test, [0, 1, 2, 3]])
         ks = [float(accuracy_score(knn_pred, table.iloc[test, [4]])),
@@ -103,7 +104,7 @@ def lin_reg_class(table):
     kfold = KFold(n_splits=3, shuffle=True, random_state=110)
     max = 0
     for train, test in kfold.split(table):
-        lreg_clf = LogisticRegression(max_iter=100)
+        lreg_clf = LogisticRegression(max_iter=100, C=1.0, penalty='l1', solver='saga')
         lreg_clf.fit(table.iloc[train, [0, 1, 2, 3]], table.iloc[train, [4]])
         lrg_predict = lreg_clf.predict(table.iloc[test, [0, 1, 2, 3]])
         ks = [float(accuracy_score(lrg_predict, table.iloc[test, [4]])),
@@ -142,7 +143,8 @@ def drevo(table):
     kfold = KFold(n_splits=3, shuffle=True, random_state=110)
     max = 0
     for train, test in kfold.split(table):
-        drevo_clf = DecisionTreeClassifier(criterion='gini', max_depth=4, random_state=110)
+        drevo_clf = DecisionTreeClassifier(criterion='gini', max_depth=7, min_samples_leaf=4, min_samples_split=9,
+                                           splitter='random', random_state=110)
         drevo_clf.fit(table.iloc[train, [0, 1, 2, 3]], table.iloc[train, [4]])
         drevo_predict = drevo_clf.predict(table.iloc[test, [0, 1, 2, 3]])
         ks = [float(accuracy_score(drevo_predict, table.iloc[test, [4]])),
@@ -180,7 +182,8 @@ def lesok(table):
     kfold = KFold(n_splits=3, shuffle=True, random_state=110)
     max = 0
     for train, test in kfold.split(table):
-        les_clf = RandomForestClassifier(n_estimators=20, random_state=110)
+        les_clf = RandomForestClassifier(n_estimators=10, random_state=110, max_depth=11, min_samples_leaf=5,
+                                         min_samples_split=2)
         les_clf.fit(table.iloc[train, [0, 1, 2, 3]], table.iloc[train, [4]])
         les_predict = les_clf.predict(table.iloc[test, [0, 1, 2, 3]])
         ks = [float(accuracy_score(les_predict, table.iloc[test, [4]])),
@@ -231,11 +234,11 @@ def best_param_les(table):
 def best_param_drevo(table):
     X_train = table.iloc[:, :-1]
     y_train = table['target']
-    clf = LogisticRegression()
+    clf = DecisionTreeClassifier()
     parameters = {'criterion': ["gini", "entropy"],  # The function to measure the quality of a split
                   'splitter': ["best", "random"],  # The strategy used to choose the split at each node
-                  'max_depth': range(1, 13, 2),  # The maximum depth of the tree
-                  'min_samples_split': range(2, 10, 2),  # минимальное число образцов для сплита
+                  'max_depth': range(1, 13),  # The maximum depth of the tree
+                  'min_samples_split': range(2, 12),  # минимальное число образцов для сплита
                   'min_samples_leaf': range(1, 8)}  # минимальное число образцов в листах.
     grid = GridSearchCV(clf, parameters, cv=5)
     grid.fit(X_train, y_train)
@@ -266,4 +269,5 @@ def best_sosedi(table):
     grid = GridSearchCV(clf, parameters, cv=5)
     grid.fit(X_train, y_train)
     print(grid.best_params_)
+
 
